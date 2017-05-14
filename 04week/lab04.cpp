@@ -23,19 +23,24 @@ std::string validateTag(std::string tag);
 bool isValidTag(std::string tag);
 std::string removeChevrons(std::string tag);
 
+/************************************************************************
+ * main - the function that runs the program
+ ***********************************************************************/
 int main()
 {
   std::string userInput;
-  
-  // std::string userInput = "<tag>Hello<a> </a> Wellesley</tag>";
+
   while (getInput(userInput) != "quit")
   {
   std::cout << "\t" << sanitize(userInput) << std::endl;
   }
-  //std::cout << userInput << "\n";
 
   return 0;
 }
+
+/************************************************************************
+ * getInput gets input from the user and returns it to main
+ ***********************************************************************/
 std::string getInput(std::string& userInput)
 {
   std::cout << "> ";
@@ -45,6 +50,9 @@ std::string getInput(std::string& userInput)
   return userInput;
 }
 
+/************************************************************************
+ * sanitize - takes the user input and sanitizes the malicious tags
+ ***********************************************************************/
 std::string sanitize(std::string& userInput)
 {
   int beginTagIndex = 0;
@@ -54,8 +62,6 @@ std::string sanitize(std::string& userInput)
 
   for (int i = 0; i < userInput.length(); i++)
     {
-      //std::cout << userInput[i] << " ";
-
       if (userInput[i] == '<' )
         {
           std::string tag = "";
@@ -74,6 +80,10 @@ std::string sanitize(std::string& userInput)
   return sanitizedInput;
 }
 
+/************************************************************************
+ * validateTag - returns the tag if it is valid and the sanitized tag if
+ * it is invalid
+ ***********************************************************************/
 std::string validateTag(std::string tag)
 {
   if (isValidTag(tag))
@@ -82,6 +92,9 @@ std::string validateTag(std::string tag)
     return sanitizeTag(tag);
 }
 
+/************************************************************************
+ * sanitizeTag - sanitizes malicious tags
+ ***********************************************************************/
 std::string sanitizeTag(std::string tag)
 {
   if (tag[1] == '/')
@@ -90,6 +103,9 @@ std::string sanitizeTag(std::string tag)
     return "&lt;" + removeChevrons(tag) + "&gt;";
 }
 
+/************************************************************************
+ * isValidTag - checks the tag against a whitelist to see if it is valid
+ ***********************************************************************/
 bool isValidTag(std::string tag)
 {
   std::string validTags[13] = {"a", "abbr", "acronym", "b", "blockquote",
@@ -105,6 +121,10 @@ bool isValidTag(std::string tag)
   return false;
 }
 
+/************************************************************************
+ * removeChevrons - takse the punction off of a tag so that we can check
+ * it against the whitelist
+ ***********************************************************************/
 std::string removeChevrons(std::string tag)
 {
   std::string innerTag;
