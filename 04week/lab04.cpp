@@ -13,47 +13,105 @@
 ************************************************************************/
 #include <iostream>
 #include <string>
+#include <vector>
+#include <iterator>
 
-void getInput(std::string userInput[]);
-void sanitize(std::string userInput[]);
+void getInput(std::string& userInput);
+std::string sanitize(std::string& userInput);
+std::string sanitizeTag(std::string tag);
+std::string validateTag(std::string tag);
+bool isValidTag(std::string tag);
+std::string removeChevrons(std::string tag);
 
 int main()
 {
-  std::string userInput[1000];
+  std::string userInput;
 
+  // std::string userInput = "<tag>Hello<a> </a> Wellesley</tag>";
   getInput(userInput);
-  sanitize(userInput);
+  std::cout << sanitize(userInput) << std::endl;
 
   //std::cout << userInput << "\n";
 
   return 0;
 }
-
-void getInput(std::string userInput[])
+void getInput(std::string& userInput)
 {
   std::cout << ">";
-  std::string element;
 
-  int i = 0;
-  while (std::cin >> userInput[i])
-    {
-      i++;
-    }
-  // for (int i = 0; std::cin >> element; i++)
-  //   {
-  //     userInput[i] = element;
-  // }
-  //std::getline(std::cin,userInput);
+  std::getline(std::cin,userInput);
 }
 
-void sanitize(std::string userInput[])
+std::string sanitize(std::string& userInput)
 {
-  // for (int i = 0; i < userInput.length(); i++)
-  //   {
-  //     std::cout << userInput[i] << " ";
-  //     // if (userInput[i] == '<' &&
-  //     //     (userInput[i++] !=  ))
+  int beginTagIndex = 0;
+  int endTagIndex = 0;
+  int j = 0;
+  std::string sanitizedInput = "";
 
-  //   }
+  for (int i = 0; i < userInput.length(); i++)
+    {
+      //std::cout << userInput[i] << " ";
+
+      if (userInput[i] == '<' )
+        {
+          std::string tag = "";
+          for (j = i; userInput[j - 1] != '>'; j++)
+            {
+              tag += userInput[j];
+            }
+          sanitizedInput += validateTag(tag);
+          i = j - 1;
+        }
+      else
+        {
+          sanitizedInput += userInput[i];
+        }
+    }
+  return sanitizedInput;
 }
 
+std::string validateTag(std::string tag)
+{
+  if (isValidTag(tag))
+    return tag;
+  else
+    return sanitizeTag(tag);
+}
+
+std::string sanitizeTag(std::string tag)
+{
+  if (tag[1] == '/')
+    return "&lt;/" + removeChevrons(tag) + "&gt;";
+  else
+    return "&lt;" + removeChevrons(tag) + "&gt;";
+}
+
+bool isValidTag(std::string tag)
+{
+  std::string validTags[13] = {"a", "abbr", "acronym", "b", "blockquote",
+                               "cite", "code", "del", "em", "i", "q",
+                               "strike", "strong"};
+  std::string innerTag = removeChevrons(tag);
+  for (int i =0; i < 13; i++)
+    {
+      if (innerTag == validTags[i])
+        return true;
+    }
+
+  return false;
+}
+
+std::string removeChevrons(std::string tag)
+{
+  std::string innerTag;
+  if (tag[1] == '/')
+    {
+      innerTag = tag.substr(2, (tag.length()-3));
+    }
+  else
+    {
+      innerTag = tag.substr(1, (tag.length()-2));
+    }
+  return innerTag;
+}
