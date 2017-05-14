@@ -114,7 +114,14 @@ std::string removeChevrons(std::string tag)
     }
   else
     {
-      innerTag = tag.substr(1, (tag.length()-2));
+      int i;
+      for (i = 0; tag[i] != ' ' && i < tag.length(); i++);
+      if (tag[i] == ' ') {
+        innerTag = tag.substr(1, (i - 1));
+        std::cout << "\t Error: " << innerTag << std::endl;
+      }
+      else
+        innerTag = tag.substr(1, (tag.length() - 2));
     }
   return innerTag;
 }
