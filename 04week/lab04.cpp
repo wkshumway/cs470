@@ -16,7 +16,7 @@
 #include <vector>
 #include <iterator>
 
-void getInput(std::string& userInput);
+std::string getInput(std::string& userInput);
 std::string sanitize(std::string& userInput);
 std::string sanitizeTag(std::string tag);
 std::string validateTag(std::string tag);
@@ -26,20 +26,23 @@ std::string removeChevrons(std::string tag);
 int main()
 {
   std::string userInput;
-
+  
   // std::string userInput = "<tag>Hello<a> </a> Wellesley</tag>";
-  getInput(userInput);
-  std::cout << sanitize(userInput) << std::endl;
-
+  while (getInput(userInput) != "quit")
+  {
+  std::cout << "\t" << sanitize(userInput) << std::endl;
+  }
   //std::cout << userInput << "\n";
 
   return 0;
 }
-void getInput(std::string& userInput)
+std::string getInput(std::string& userInput)
 {
-  std::cout << ">";
+  std::cout << "> ";
 
   std::getline(std::cin,userInput);
+
+  return userInput;
 }
 
 std::string sanitize(std::string& userInput)
