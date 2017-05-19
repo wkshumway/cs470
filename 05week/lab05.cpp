@@ -86,7 +86,7 @@ void partOne(int byValueParameter)
    // put your magic code between here...
    //  *((unsigned long *)pStack) = get_sp();
    //cout << "Beneath Assignment\n";
-   pStack = (void*)&pStack;
+   pStack = (void*)&byValueParameter;
    pHeap = new (nothrow) int [5];
    pCode = (void*)get_etext();
    // ... and here
@@ -143,12 +143,17 @@ void partTwo(char *text, long number)
         << "-------------------+"
         << "-------------------+"
         << "-----------------+\n";
-   for (int i = -4; i <= 20; i++)
+   for (int i = -100; i <= 200; i++)
    {
 
       ////////////////////////////////////////////////
       // put your magic code between here...
-
+     cout << "[" << setw(2) << i << ']'
+          << setw(15) << &bow + i
+          << setw(20) << *(&bow + i)
+          // << setw(20) <<
+          << setw(18) << displayCharArray(((char *)(&bow +i))) << endl;
+          // << endl;
       // ... and here
       ////////////////////////////////////////////////
    }
