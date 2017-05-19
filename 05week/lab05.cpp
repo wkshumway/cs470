@@ -4,7 +4,7 @@
 *    Brother Helfrich, CS470
 * Author:
 *    your name
-* Summary: 
+* Summary:
 *    This program is designed to illustrate weaknesses in the stack.
 *
 ************************************************************************/
@@ -13,6 +13,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <mach-o/getsect.h>
 using namespace std;
 
 
@@ -30,7 +31,7 @@ int main()
    char text[] = "%%main%%";
    long number = 1234567;
    &number;
-   
+
    // prompt
    cout << "Please select an option:\n";
    cout << "  1.  Find the address\n";
@@ -66,7 +67,8 @@ int main()
  **************************************************************
  **************************************************************/
 
-
+// extern char etext, edata, end;
+//extern "C" unsigned long get_sp(void);
 /**********************************************
  * Part 1
  *
@@ -82,7 +84,11 @@ void partOne(int byValueParameter)
 
    ////////////////////////////////////////////////
    // put your magic code between here...
-
+   //  *((unsigned long *)pStack) = get_sp();
+   //cout << "Beneath Assignment\n";
+   pStack = (void*)&pStack;
+   pHeap = new (nothrow) int [5];
+   pCode = (void*)get_etext();
    // ... and here
    ////////////////////////////////////////////////
 
@@ -139,10 +145,10 @@ void partTwo(char *text, long number)
         << "-----------------+\n";
    for (int i = -4; i <= 20; i++)
    {
-      
+
       ////////////////////////////////////////////////
       // put your magic code between here...
-   
+
       // ... and here
       ////////////////////////////////////////////////
    }
@@ -164,11 +170,11 @@ void readStack()
 {
    int   number;
    char  text[16];
-   
+
    ////////////////////////////////////////////////
    // put your magic code between here...
 
-   
+
    // ... and here
    ////////////////////////////////////////////////
 
@@ -207,7 +213,7 @@ void partThree()
    // Call the function and display the results.
    pointerFunction = fail;
    letterGrade = 'B';
-   readStack();            // vulnerability is here 
+   readStack();            // vulnerability is here
    (*pointerFunction)(letterGrade);
 
    return;
@@ -230,5 +236,3 @@ void pass(char grade)
 {
    cout << "\tGood job, you got a(n) '" << grade << "'\n";
 }
-
-
