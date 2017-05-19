@@ -1,15 +1,12 @@
 /***********************************************************************
 * Program:
 *    Week 04, Sanitization Program
-*    Brother Helfrich, CS470
+*    Brother Wilson, CS470
 * Author:
 *    Wellesley Shumway
 * Summary:
-*    Please include a detailed description of:
-*    1. What this program is designed to do
-*    2. How this program will go about solving the problem
-*    3. What assumptions about input (file or user) is made
-*    4. Citations if the algorithm was borrowed or inspired from any source
+*    This is a program that takes HTML input and takes out all tags that
+*    are not on a whitelist.
 ************************************************************************/
 #include <iostream>
 #include <string>
@@ -17,7 +14,7 @@
 #include <iterator>
 
 std::string getInput(std::string& userInput);
-std::string sanitize(std::string& userInput);
+std::string sanitize(std::string userInput);
 std::string sanitizeTag(std::string tag);
 std::string validateTag(std::string tag);
 bool isValidTag(std::string tag);
@@ -53,7 +50,7 @@ std::string getInput(std::string& userInput)
 /************************************************************************
  * sanitize - takes the user input and sanitizes the malicious tags
  ***********************************************************************/
-std::string sanitize(std::string& userInput)
+std::string sanitize(std::string userInput)
 {
   int beginTagIndex = 0;
   int endTagIndex = 0;
@@ -138,7 +135,6 @@ std::string removeChevrons(std::string tag)
       for (i = 0; tag[i] != ' ' && i < tag.length(); i++);
       if (tag[i] == ' ') {
         innerTag = tag.substr(1, (i - 1));
-        std::cout << "\t Error: " << innerTag << std::endl;
       }
       else
         innerTag = tag.substr(1, (tag.length() - 2));
