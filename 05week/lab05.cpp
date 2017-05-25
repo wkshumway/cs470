@@ -1,9 +1,9 @@
 /***********************************************************************
 * Program:
-*    Lab 05, The stack
-*    Brother Helfrich, CS470
+*    Week 05, The stack
+*    Brother Wilson, CS470
 * Author:
-*    your name
+*    Wellesley Shumway
 * Summary:
 *    This program is designed to illustrate weaknesses in the stack.
 *
@@ -13,7 +13,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-#include <mach-o/getsect.h>
 using namespace std;
 
 
@@ -67,7 +66,7 @@ int main()
  **************************************************************
  **************************************************************/
 
-// extern char etext, edata, end;
+extern char etext, edata, end;
 //extern "C" unsigned long get_sp(void);
 /**********************************************
  * Part 1
@@ -88,7 +87,7 @@ void partOne(int byValueParameter)
    //cout << "Beneath Assignment\n";
    pStack = (void*)&byValueParameter;
    pHeap = new (nothrow) int [5];
-   pCode = (void*)get_etext();
+    pCode = (void*) etext;
    // ... and here
    ////////////////////////////////////////////////
 
@@ -143,16 +142,16 @@ void partTwo(char *text, long number)
         << "-------------------+"
         << "-------------------+"
         << "-----------------+\n";
-   for (int i = -100; i <= 200; i++)
+   for (int i = -4; i <= 20; i++)
    {
 
       ////////////////////////////////////////////////
       // put your magic code between here...
      cout << "[" << setw(2) << i << ']'
           << setw(15) << &bow + i
+          << setw(20) << hex << *(&bow + i) << dec
           << setw(20) << *(&bow + i)
-          // << setw(20) <<
-          << setw(18) << displayCharArray(((char *)(&bow +i))) << endl;
+          << setw(18) << displayCharArray(((char *)(&bow + i))) << endl;
           // << endl;
       // ... and here
       ////////////////////////////////////////////////
@@ -179,7 +178,24 @@ void readStack()
    ////////////////////////////////////////////////
    // put your magic code between here...
 
+   assert(isalpha(text[15+72])); 
+   /*ratios: 80, 96, 103, 16*/
+   for (int i = 0; i < 16; i++)
+   {
+      text[i] = text[i+64]; 
+   }
 
+   number = *((int*)(&text[80]));
+
+   char* gradep = (&text[87]);
+   *gradep = 'A';
+
+   void (*pointerFunction)(char);
+ 
+   int offset = 12;
+   //assert(is_function(*(&pointerFunction + offset)));
+   *(&pointerFunction + offset) = pass;
+ 
    // ... and here
    ////////////////////////////////////////////////
 
