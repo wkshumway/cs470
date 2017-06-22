@@ -1,9 +1,9 @@
 /***********************************************************************
  * Program:
  *    Week 10, Bell-LaPadula
- *    Brother Helfrich, CS470
+ *    Brother Wilson, CS470
  * Author:
- *    your name here
+ *    Wellesley Shumway
  * Summary:
  *    This program tracks a collection of student grades
  *    Currently, it performs no authentication and furthermore
@@ -21,6 +21,13 @@
 #include <cassert>
 using namespace std;
 
+enum Permissions
+{
+  EVERYONE = -1,
+  SELF = 0,
+  ALL = 1
+};
+
 /**************************************************************
  * USER
  * All the users currently in the system
@@ -34,14 +41,15 @@ struct User
 }
   const users[] =
     {
-      { "Bob",  "passwordBob", 1, "Bob" },
-      { "Hans", "passwordHans", 1, "Bob" },
-      { "Sam",  "passwordSam", 0, "Samual Stevenson" },
-      { "Sue",  "passwordSue", 0, "Susan Bakersfield" },
-      { "Sly",  "passwordSly", 0, "Sylvester Stallone" }
+      { "Unknown", "passwordUnknown", NO_PERMISSIONS, "Unknown" },
+      { "Bob",  "passwordBob", VIEW_ALL, "Bob" },
+      { "Hans", "passwordHans", VIEW_ALL, "Bob" },
+      { "Sam",  "passwordSam", VIEW_SELF, "Samual Stevenson" },
+      { "Sue",  "passwordSue", VIEW_SELF, "Susan Bakersfield" },
+      { "Sly",  "passwordSly", VIEW_SELF, "Sylvester Stallone" }
     };
 
-#define ID_INVALID -1
+#define ID_INVALID 0
 
 /******************************************
  * FILE
@@ -58,9 +66,9 @@ struct File
  ****************************************/
 const File files[3] =
   {
-    { "sam.txt" },
-    { "sue.txt" },
-    { "sly.txt" }
+    { "/home/cs470/week10/sam.txt" },
+    { "/home/cs470/week10/sue.txt" },
+    { "/home/cs470/week10/sly.txt" }
   };
 
 
@@ -98,6 +106,7 @@ private:
   vector < Item > scores;         // list of scores and weightings
   const char * filename;
   int userId;
+  int accessibility;
 
   bool hasPermission(int userID);
   void editScore(int);  // edit one score
@@ -148,7 +157,7 @@ float StudentGrade::getWeight(int iScore)
  * STUDENT GRADE
  * constructor: read the grades from a file
  **********************************************/
-StudentGrade::StudentGrade(const File & file) : change(false)
+StudentGrade::StudentGrade(const File & file, bool selfCanView, bool publicCanView, bool adminCanView) : change(false)
 {
   filename = file.filename;
   assert(filename && *filename);
@@ -168,6 +177,9 @@ StudentGrade::StudentGrade(const File & file) : change(false)
 
   // close up shop
   fin.close();
+ 
+  this->selfCanView = selfCanView;
+  this
 }
 
 /**************************************************
@@ -251,7 +263,7 @@ void StudentGrade::editScore(int iScoreEdit)
  ***************************************/
 bool StudentGrade::hasPermission(int userID)
 {
-  return users[userID].permission >= 1 || !users[userID].fullName.compare(name);
+  return users[userID].permission >= VIEW_ALL || !users[userID].fullName.compare(name);
 }
 
 /*********************************************
@@ -265,8 +277,12 @@ void StudentGrade::editScores(int userID)
        << endl;
 
   // display score list
-  cout << "Score list\n"
-       << "\tScore \tWeight\n";
+  cout << "Score list\n";
+
+  if (hasPermission(userID))
+    {
+      cout << "\tScore \tWeight\n";
+    }
 
   for (int iScore = 0; iScore < scores.size(); iScore++)
     {
@@ -543,7 +559,6 @@ int authenticate()
 int main()
 {
   int userID = authenticate();
-  cout << "Your user id is : " << userID << endl;
   Interface interface(userID);
 
   interface.interact();
