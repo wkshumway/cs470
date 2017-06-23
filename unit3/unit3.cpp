@@ -587,7 +587,7 @@ Interface::Interface(int userID)
         {
           indexOfStudentGradeOfCurrentUser = i;
         }
-      students.push_back(student);
+      students[i] = student;
     }
   this->userID = userID;
 }
