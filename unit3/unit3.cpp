@@ -563,6 +563,7 @@ void Interface::interact()
     }
   else if (users[userID].privilegeLevel == STUDENT)
     {
+      cout << "Inside student display\n";
       students[userID].displayScores();
       // visual separater
       cout << "---------------------------------------------------\n";
