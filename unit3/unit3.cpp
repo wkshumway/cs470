@@ -112,6 +112,9 @@ public:
   void   setWeight(int iScore, float weight);
   float  getWeight(int iScore);
   string getName() { return name; };
+  bool hasWritePermission();
+  bool hasReadPermission();
+
 private:
   bool change;
   string name;                    // student's name
@@ -121,8 +124,6 @@ private:
   int userID;
 
   void editScore(int);  // edit one score
-  bool hasWritePermission();
-  bool hasReadPermission();
 };
 
 /**********************************************
@@ -503,6 +504,7 @@ public:
 private:
   int promptForStudent();
   int userID;
+  int indexOfStudentGradeOfCurrentUser;
   vector < StudentGrade > students;
 };
 
@@ -561,10 +563,10 @@ void Interface::interact()
           cout << "---------------------------------------------------\n";
         }
     }
-  else if (users[userID].privilegeLevel == STUDENT)
+  else if (users[indexOfStudentGradeOfCurrentUser].privilegeLevel == STUDENT)
     {
       cout << "Inside student display\n";
-
+      //user id is not goint to work as an index here.
       students[userID].displayScores();
       // visual separater
       cout << "---------------------------------------------------\n";
@@ -581,6 +583,11 @@ Interface::Interface(int userID)
   for (int i = 0; i < sizeof(resources) / sizeof(Resource); i++)
     {
       StudentGrade student(resources[i], userID);
+      //need to get the indice of the studentGrade that matches our ID.
+      if (student.getName().compare(users[userID].nameForComparison) != 0)
+        {
+          indexOfStudentGradeOfCurrentUser = i;
+        }
       students.push_back(student);
     }
   this->userID = userID;
