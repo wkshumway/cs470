@@ -330,6 +330,10 @@ bool StudentGrade::hasReadPermission()
  *******************************************/
 void StudentGrade::editScores()
 {
+  if (!hasWritePermission() && !hasReadPermission())
+    {
+      return;
+    }
   if (hasWritePermission() == true)
     {
       // Give the user some feedback
