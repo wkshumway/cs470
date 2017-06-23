@@ -536,7 +536,7 @@ int Interface::promptForStudent()
       cout << ">";
       cin >> iSelected;
     }
-
+  
   return --iSelected;
 }
 
@@ -546,20 +546,27 @@ int Interface::promptForStudent()
 void Interface::interact()
 {
   int iSelected;
-
-  //needs to actually go check the ACE somehow
-  while (-1 != (iSelected = promptForStudent()))
+  if (users[userID].privilegeLevel == PROFESSOR || users[userID].privilegeLevel == GRADER )
     {
-      // edit grades as necessary
-      students[iSelected].editScores();
+      //needs to actually go check the ACE somehow
+      while (-1 != (iSelected = promptForStudent()))
+        {
+          // edit grades as necessary
+          students[iSelected].editScores();
 
-      // show the results
-      students[iSelected].displayScores();
+          // show the results
+          students[iSelected].displayScores();
 
+          // visual separater
+          cout << "---------------------------------------------------\n";
+        }
+    }
+  else if (users[userID].privilegeLevel == STUDENT)
+    {
+      students[userID].displayScores();
       // visual separater
       cout << "---------------------------------------------------\n";
     }
-
   return;
 }
 
