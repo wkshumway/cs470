@@ -565,7 +565,6 @@ void Interface::interact()
     }
   else if (users[userID].privilegeLevel == STUDENT)
     {
-      cout << "Inside student display\n";
       //user id is not goint to work as an index here.
       students[indexOfStudentGradeOfCurrentUser].displayScores();
       // visual separater
