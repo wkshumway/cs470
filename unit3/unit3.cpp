@@ -1,16 +1,16 @@
 /***********************************************************************
-* Program:
-*    Unit 3, ACLs
-*    Brother Helfrich, CS470
-* Author:
-*    your name here
-* Summary: 
-*    This program tracks a collection of student grades
-*    Currently, it performs no authentication and furthermore
-*    is so trivially hack-able that it is a joke.  Hahaha.  Why
-*    is noone laughing?  OK, as you guess, your job is to make
-*    this program secure.  Enjoy!
-************************************************************************/
+ * program:
+ *    unit 3, ACLs
+ *    Brother Helfrich, CS470
+ * Author:
+ *    your name here
+ * Summary:
+ *    This program tracks a collection of student grades
+ *    Currently, it performs no authentication and furthermore
+ *    is so trivially hack-able that it is a joke.  Hahaha.  Why
+ *    is noone laughing?  OK, as you guess, your job is to make
+ *    this program secure.  Enjoy!
+ ************************************************************************/
 
 
 #include <iostream>
@@ -21,17 +21,67 @@
 #include <cassert>
 using namespace std;
 
+enum PrivilegeLevel
+  {
+    PROFESSOR,
+    GRADER,
+    STUDENT,
+    PUBLIC
+  };
+
+/**************************************************************
+ * USER
+ * All the users currently in the system - the user id is the
+ * index of the user in this array.
+ *************************************************************/
+struct User
+{
+  const char *name;
+  const char *password;
+  PrivilegeLevel privilegeLevel;
+  string nameForComparison;
+}
+  const users[] =
+    {
+      { "nil", "nil", PUBLIC, "nil"},
+      { "Bob",  "passwordBob", PROFESSOR, "Bob"},
+      { "Hans", "passwordHans", GRADER, "Hans" },
+      { "Sam",  "passwordSam", STUDENT, "Samual Stevenson" },
+      { "Sue",  "passwordSue", STUDENT, "Susan Bakersfield" },
+      { "Sly",  "passwordSly", STUDENT, "Sylvester Stallone" }
+    };
+
+#define ID_INVALID 0
+
+/**************************************************************
+ * ACE
+ * A user ID paired with permission
+ *************************************************************/
+struct ACE
+{
+  ACE() :read(false), write(false) {}
+  int userID;
+  bool read;
+  bool write;
+};
+
+/**************************************************************
+ * ACL
+ * A list of ACE's
+ *************************************************************/
+typedef vector < ACE > ACL;
+
 struct Resource
 {
-   const char *filename;   // where it is located
+  const char *filename;   // where it is located
 };
 
 const Resource resources[3] =
-{
-   { "/home/cs470/unit3/sam.txt" },
-   { "/home/cs470/unit3/sue.txt" },
-   { "/home/cs470/unit3/sly.txt" }
-};
+  {
+    { "/home/cs470/unit3/sam.txt" },
+    { "/home/cs470/unit3/sue.txt" },
+    { "/home/cs470/unit3/sly.txt" }
+  };
 
 
 /*****************************************************************
@@ -41,44 +91,48 @@ const Resource resources[3] =
  *****************************************************************/
 struct Item
 {
-   float weight;
-   float score;
+  float weight;
+  float score;
 };
 
-/***************************************************
+/**************************************************
  * One instance of a student grade
  ***************************************************/
 class StudentGrade
 {
 public:
-   StudentGrade(const Resource & resource);
-   ~StudentGrade();
-   string getLetterGrade(); // output letter grade B+
-   float  getNumberGrade(); // integral number grade 88
-   void   displayScores(); // display scores on screen
-   void   editScores(); // interactively edit score
-   void   setScore( int iScore, float score);
-   float  getScore( int iScore);
-   void   setWeight(int iScore, float weight);
-   float  getWeight(int iScore);
-   string getName() { return name; };
+  StudentGrade(const Resource & resource, int userID);
+  ~StudentGrade();
+  string getLetterGrade(); // output letter grade B+
+  float  getNumberGrade(); // integral number grade 88
+  void   displayScores(); // display scores on screen
+  void   editScores(); // interactively edit score
+  void   setScore( int iScore, float score);
+  float  getScore( int iScore);
+  void   setWeight(int iScore, float weight);
+  float  getWeight(int iScore);
+  string getName() { return name; };
 private:
-   bool change;
-   string name;                    // student's name
-   vector < Item > scores;         // list of scores and weightings
-   const char * filename;
-   
-   void editScore(int);  // edit one score
+  bool change;
+  string name;                    // student's name
+  vector < Item > scores;         // list of scores and weightings
+  const char * filename;
+  ACL acl;
+  int userID;
+
+  void editScore(int);  // edit one score
+  bool hasWritePermission();
+  bool hasReadPermission();
 };
 
 /**********************************************
  * SET SCORE
  **********************************************/
-void StudentGrade::setScore( int iScore, float score)
+void StudentGrade::setScore(int iScore, float score)
 {
-   assert(iScore >= 0 && iScore < scores.size());
-   scores[iScore].score = score;
-   change = true;
+  assert(iScore >= 0 && iScore < scores.size());
+  scores[iScore].score = score;
+  change = true;
 }
 
 /**********************************************
@@ -86,8 +140,8 @@ void StudentGrade::setScore( int iScore, float score)
  **********************************************/
 float StudentGrade::getScore(int iScore)
 {
-   assert(iScore >= 0 && iScore < scores.size());
-   return scores[iScore].score;
+  assert(iScore >= 0 && iScore < scores.size());
+  return scores[iScore].score;
 }
 
 /****************************************
@@ -95,12 +149,12 @@ float StudentGrade::getScore(int iScore)
  ****************************************/
 void StudentGrade::setWeight(int iScore, float weight)
 {
-   assert(iScore >= 0 && iScore < scores.size());
-   if (weight >= 0.0)
-   {
+  assert(iScore >= 0 && iScore < scores.size());
+  if (weight >= 0.0)
+    {
       scores[iScore].weight = weight;
       change = true;
-   }
+    }
 }
 
 /**********************************************
@@ -108,34 +162,57 @@ void StudentGrade::setWeight(int iScore, float weight)
  **********************************************/
 float StudentGrade::getWeight(int iScore)
 {
-   assert(iScore >= 0 && iScore < scores.size());
-   return scores[iScore].weight;
+  assert(iScore >= 0 && iScore < scores.size());
+  return scores[iScore].weight;
 }
 
 /***********************************************
  * STUDENT GRADE
  * constructor: read the grades from a file
  **********************************************/
-StudentGrade::StudentGrade(const Resource & resource) : change(false)
+StudentGrade::StudentGrade(const Resource & resource, int userID) : change(false), userID(userID)
 {
-   filename = resource.filename;
-   assert(filename && *filename);
-   
-   // open file
-   ifstream fin(filename);
-   if (fin.fail())
-      return;
+  filename = resource.filename;
+  assert(filename && *filename);
 
-   // read name
-   getline(fin, name);
+  // open file
+  ifstream fin(filename);
+  if (fin.fail())
+    return;
 
-   // read scores
-   Item item;
-   while (fin >> item.score >> item.weight)
-      scores.push_back(item);
+  // read name
+  getline(fin, name);
 
-   // close up shop
-   fin.close();
+  // read scores
+  Item item;
+  while (fin >> item.score >> item.weight)
+    scores.push_back(item);
+
+  // close up shop
+  fin.close();
+
+  //populate our ACE
+  for (int i = 0; i < (int)(sizeof(users)/sizeof(users[0])); i++)
+    {
+      ACE ace;
+      if (users[i].privilegeLevel == PROFESSOR)
+        {
+          ace.write = true;
+          ace.read = true;
+        }
+      if (users[i].privilegeLevel == GRADER)
+        {
+          ace.write = true;
+        }
+      if (users[i].privilegeLevel == STUDENT &&
+          //and the name of the user is the same as the StudentGrade name
+          users[i].nameForComparison.compare(name) == 0)
+        {
+          ace.read = true;
+        }
+
+      acl.push_back(ace);
+    }
 }
 
 /**************************************************
@@ -144,28 +221,28 @@ StudentGrade::StudentGrade(const Resource & resource) : change(false)
  *************************************************/
 StudentGrade::~StudentGrade()
 {
-   assert(filename && *filename);
+  assert(filename && *filename);
 
-   if (!change)
-      return;
-   
-   // open file
-   ofstream fout(filename);
-   if (fout.fail())
-      return;
+  if (!change)
+    return;
 
-   // header is the students name
-   fout << name << endl;
+  // open file
+  ofstream fout(filename);
+  if (fout.fail())
+    return;
 
-   // write the data
-   for (int iScore = 0; iScore < scores.size(); iScore++)
-      fout << scores[iScore].score
-           << "\t"
-           << scores[iScore].weight
-           << endl;
+  // header is the students name
+  fout << name << endl;
 
-   // make like a tree
-   fout.close();
+  // write the data
+  for (int iScore = 0; iScore < scores.size(); iScore++)
+    fout << scores[iScore].score
+         << "\t"
+         << scores[iScore].weight
+         << endl;
+
+  // make like a tree
+  fout.close();
 }
 
 /****************************************
@@ -173,116 +250,160 @@ StudentGrade::~StudentGrade()
  ***************************************/
 void StudentGrade::editScore(int iScoreEdit)
 {
-   float userInput;  // user inputed weight.
-   
-   assert(iScoreEdit >= 0 && iScoreEdit < scores.size());
+  float userInput;  // user inputed weight.
 
-   //
-   // Score
-   //
-   
-   // get new score
-   cout << "Enter grade: ";
-   cin  >> userInput;
-         
-   // validate
-   while (userInput > 100 || userInput < 0)
-   {
+  assert(iScoreEdit >= 0 && iScoreEdit < scores.size());
+
+  //
+  // Score
+  //
+
+  // get new score
+  cout << "Enter grade: ";
+  cin  >> userInput;
+
+  // validate
+  while (userInput > 100 || userInput < 0)
+    {
       cout << "Invalid grade.  Select a number between 0 and 100: ";
       cin  >> userInput;
-   }
-   setScore(iScoreEdit, userInput);
+    }
+  setScore(iScoreEdit, userInput);
 
-   //
-   // Weight
-   //
-   
-   // get the weight
-   cout << "Enter the weight for the score or (0) for unchanged: ";
-   cin >> userInput;
-   
-   // validate
-   while (userInput > 1.0 || userInput < 0.0)
-   {
+  //
+  // Weight
+  //
+
+  // get the weight
+  cout << "Enter the weight for the score or (0) for unchanged: ";
+  cin >> userInput;
+
+  // validate
+  while (userInput > 1.0 || userInput < 0.0)
+    {
       cout << "Invalid weight.  Select a number between 0 and 1: ";
       cin  >> userInput;
-   }
-   if (userInput != 0.0)
-      setWeight(iScoreEdit, userInput);
-         
-   return;
+    }
+  if (userInput != 0.0)
+    setWeight(iScoreEdit, userInput);
+
+  return;
 }
 
+/*********************************************
+ * Checks wether this userID has write
+ * permission for this file
+ *******************************************/
+bool StudentGrade::hasWritePermission()
+{
+  ACL::iterator it;
+  for(it = acl.begin() ; it < acl.end(); it++)
+    {
+      if (it->userID == userID && it->write == true )
+        {
+          return true;
+        }
+    }
 
+  return false;
+}
+
+/*********************************************
+ * Checks wether this userID has read
+ * permission for this file
+ *******************************************/
+bool StudentGrade::hasReadPermission()
+{
+  ACL::iterator it;
+  for(it = acl.begin() ; it < acl.end(); it++)
+    {
+      if (it->userID == userID && it->read == true )
+        {
+          return true;
+        }
+    }
+
+  return false;
+}
 /*********************************************
  * Edit scores until user says he is done
  *******************************************/
 void StudentGrade::editScores()
 {
-   // Give the user some feedback
-   cout << "Editing the scores of "
-        << name
-        << endl;
+  if (hasWritePermission() == true)
+    {
+      // Give the user some feedback
+      cout << "Editing the scores of "
+           << name
+           << endl;
+    }
 
-   // display score list
-   cout << "Score list\n"
-        << "\tScore \tWeight\n";
-
-   for (int iScore = 0; iScore < scores.size(); iScore++)
-   {
+  // display score list
+  cout << "Score list\n";
+  if (hasReadPermission() == true)
+    {
+      cout << "\tScore \tWeight\n";
+    }
+  for (int iScore = 0; iScore < scores.size(); iScore++)
+    {
       cout << "(" << iScore + 1 << ")"
            << "\t";
-      float score = getScore(iScore);
-      float weight = getWeight(iScore);
+      if (hasReadPermission() == true)
+        {
+          float score = getScore(iScore);
+          float weight = getWeight(iScore);
 
-      cout << score << "%"
-           << "\t"
-           << weight;
-
+          cout << score << "%"
+               << "\t"
+               << weight;
+        }
       cout << endl;
-   }
-   cout << "(0)\tExit\n";
-   
-   // prompt
-   bool done = false;
-   while (!done)
-   {
+    }
+  cout << "(0)\tExit\n";
+
+  if (hasWritePermission() == true)
+    {
       // prompt
-      int iScoreEdit;
-      cout << "Which score would you like to edit (0-"
-           << scores.size()
-           << "): ";
-      cin  >> iScoreEdit;
-      
-      // validate score number
-      while (iScoreEdit > scores.size() || iScoreEdit < 0)
-      {
-         cout << "Invalid number.  Select a number between 0 and "
-              << scores.size()
-              << ": ";
-         cin  >> iScoreEdit;
-      }
+      bool done = false;
+      while (!done)
+        {
+          // prompt
+          int iScoreEdit;
+          cout << "Which score would you like to edit (0-"
+               << scores.size()
+               << "): ";
+          cin  >> iScoreEdit;
 
-      // from 1 based to 0 based
-      iScoreEdit--;
+          // validate score number
+          while (iScoreEdit > scores.size() || iScoreEdit < 0)
+            {
+              cout << "Invalid number.  Select a number between 0 and "
+                   << scores.size()
+                   << ": ";
+              cin  >> iScoreEdit;
+            }
 
-      // edit the score
-      if (iScoreEdit != -1)
-      {
-         // edit score
-         editScore(iScoreEdit);
+          // from 1 based to 0 based
+          iScoreEdit--;
 
-         // continue
-         char response;
-         cout << "Do you want to edit another score? (Y/N) ";
-         cin  >> response;
-         done = (response == 'N' || response == 'n');
-      } 
-      else
-         done = true;
-   }
+          // edit the score
+          if (iScoreEdit != -1)
+            {
+              // edit score
+              editScore(iScoreEdit);
 
-   return;
+              // continue
+              char response;
+              cout << "Do you want to edit another score? (Y/N) ";
+              cin  >> response;
+              done = (response == 'N' || response == 'n');
+            }
+          else
+            done = true;
+        }
+    }
+
+  return;
 }
 
 /************************************************
@@ -290,33 +411,33 @@ void StudentGrade::editScores()
  ***********************************************/
 void StudentGrade::displayScores()
 {
-   if (scores.size() == 0)
-      return;
+  if (scores.size() == 0)
+    return;
 
-   // name
-   cout << "Student name:\n\t"
-        << name 
-        << endl;
+  // name
+  cout << "Student name:\n\t"
+       << name
+       << endl;
 
-   // grade
-   cout << "Grade:\n\t"
-        << getNumberGrade() << "%"
-        << " : "
-        << getLetterGrade()
-        << endl;
+  // grade
+  cout << "Grade:\n\t"
+       << getNumberGrade() << "%"
+       << " : "
+       << getLetterGrade()
+       << endl;
 
-   // detailed score
-   cout << "Detailed score:\n"
-        << "\tScore \tWeight\n";
-   for (int iScore = 0; iScore < scores.size(); iScore++)
-      cout << "\t"
-           << getScore(iScore) << "%"
-           << "\t"
-           << getWeight(iScore)
-           << endl;
-   
-   // done
-   return;
+  // detailed score
+  cout << "Detailed score:\n"
+       << "\tScore \tWeight\n";
+  for (int iScore = 0; iScore < scores.size(); iScore++)
+    cout << "\t"
+         << getScore(iScore) << "%"
+         << "\t"
+         << getWeight(iScore)
+         << endl;
+
+  // done
+  return;
 }
 
 /***************************************************
@@ -324,23 +445,23 @@ void StudentGrade::displayScores()
  ***************************************************/
 string StudentGrade::getLetterGrade()
 {
-   const char chGrades[] = "FFFFFFDCBAA";
-   int nGrade = (int)getNumberGrade();
+  const char chGrades[] = "FFFFFFDCBAA";
+  int nGrade = (int)getNumberGrade();
 
-   // paranioa will destroy ya
-   assert(nGrade >= 0.0 && nGrade <= 100.0);
+  // paranioa will destroy ya
+  assert(nGrade >= 0.0 && nGrade <= 100.0);
 
-   // Letter grade
-   string s;
-   s += chGrades[nGrade / 10];
+  // Letter grade
+  string s;
+  s += chGrades[nGrade / 10];
 
-   // and the + and - as necessary
-   if (nGrade % 10 >= 7 && nGrade / 10 < 9  && nGrade / 10 > 5)
-      s += "+";
-   if (nGrade % 10 <= 2 && nGrade / 10 < 10 && nGrade / 10 > 5)
-      s += "-";
+  // and the + and - as necessary
+  if (nGrade % 10 >= 7 && nGrade / 10 < 9  && nGrade / 10 > 5)
+    s += "+";
+  if (nGrade % 10 <= 2 && nGrade / 10 < 10 && nGrade / 10 > 5)
+    s += "-";
 
-   return s;
+  return s;
 }
 
 /***************************************************
@@ -348,19 +469,19 @@ string StudentGrade::getLetterGrade()
  ***************************************************/
 float StudentGrade::getNumberGrade()
 {
-   // add up the scores
-   float possible = 0.0;
-   float earned   = 0.0;
-   for (int iScore = 0; iScore < scores.size(); iScore++)
-   {
+  // add up the scores
+  float possible = 0.0;
+  float earned   = 0.0;
+  for (int iScore = 0; iScore < scores.size(); iScore++)
+    {
       earned   += scores[iScore].score * scores[iScore].weight;
       possible += scores[iScore].weight;
-   }
+    }
 
-   if (possible == 0.0)
-      return 0.0;
-   else
-      return (earned / possible);
+  if (possible == 0.0)
+    return 0.0;
+  else
+    return (earned / possible);
 }
 
 /*****************************************************************
@@ -371,13 +492,14 @@ float StudentGrade::getNumberGrade()
 class Interface
 {
 public:
-   Interface();
+  Interface(int userID);
 
-   void display();
-   void interact();
+  void display();
+  void interact();
 private:
-   int promptForStudent();
-   vector < StudentGrade > students;
+  int promptForStudent();
+  int userID;
+  vector < StudentGrade > students;
 };
 
 
@@ -387,65 +509,68 @@ private:
  *************************************************/
 int Interface::promptForStudent()
 {
-   int iSelected;
+  int iSelected;
 
-   // prompt
-   cout << "Which student's grade would you like to review?\n";
-   for (int iStudent = 0; iStudent < students.size(); iStudent++)
-      cout << '\t'
-           << iStudent + 1
-           << ".\t"
-           << students[iStudent].getName()
-           << endl;
-   cout << "\t0.\tNo student, exit\n";
-   cout << "> ";
-   
-   // get input
-   cin >> iSelected;
-   while (iSelected < 0 || iSelected > students.size())
-   {
+  // prompt
+  cout << "Which student's grade would you like to review?\n";
+  for (int iStudent = 0; iStudent < students.size(); iStudent++)
+    cout << '\t'
+         << iStudent + 1
+         << ".\t"
+         << students[iStudent].getName()
+         << endl;
+  cout << "\t0.\tNo student, exit\n";
+  cout << "> ";
+
+  // get input
+  cin >> iSelected;
+  while (iSelected < 0 || iSelected > students.size())
+    {
       cout << "Invalid selection.  Please select a number between 1 and "
            << students.size()
            << " or select -1 to exit\n";
       cout << ">";
       cin >> iSelected;
-   }
-   
-   return --iSelected;
+    }
+
+  return --iSelected;
 }
 
 /***********************************************
  * update the student records interactively
  ***********************************************/
-void Interface::interact() 
+void Interface::interact()
 {
-   int iSelected;
-   while (-1 != (iSelected = promptForStudent()))
-   {
+  int iSelected;
+
+  //needs to actually go check the ACE somehow
+  while (-1 != (iSelected = promptForStudent()))
+    {
       // edit grades as necessary
       students[iSelected].editScores();
-         
+
       // show the results
       students[iSelected].displayScores();
 
       // visual separater
       cout << "---------------------------------------------------\n";
-   }
+    }
 
-   return;
+  return;
 }
 
 /*****************************************************
  * CONSTRUCTOR
  * Populate the grades list from a file
  ****************************************************/
-Interface::Interface()
+Interface::Interface(int userID)
 {
-   for (int i = 0; i < sizeof(resources) / sizeof(Resource); i++)
-   {
-      StudentGrade student(resources[i]);
+  for (int i = 0; i < sizeof(resources) / sizeof(Resource); i++)
+    {
+      StudentGrade student(resources[i], userID);
       students.push_back(student);
-   }
+    }
+  this->userID = userID;
 }
 
 /**************************************************
@@ -454,54 +579,34 @@ Interface::Interface()
  *************************************************/
 void Interface::display()
 {
-   for (int i = 0; i < students.size(); i++)
-      students[i].displayScores();
+  for (int i = 0; i < students.size(); i++)
+    students[i].displayScores();
 }
-
-/**************************************************************
- * USER
- * All the users currently in the system
- *************************************************************/
-struct User
-{
-   const char *name;
-   const char *password;
-}
-const users[] =
-{
-   { "Bob",  "passwordBob" },
-   { "Hans", "passwordHans" },
-   { "Sam",  "passwordSam" },
-   { "Sue",  "passwordSue" },
-   { "Sly",  "passwordSly" }
-};
-
-#define ID_INVALID -1
 
 /**********************************************
  * authenticate the user
  *********************************************/
 int authenticate()
 {
-   // prompt for username
-   string name;
-   cout << "Username: ";
-   cin  >> name;
+  // prompt for username
+  string name;
+  cout << "Username: ";
+  cin  >> name;
 
-   // prompt for password
-   string password;
-   cout << "Password: ";
-   cin  >> password;
+  // prompt for password
+  string password;
+  cout << "Password: ";
+  cin  >> password;
 
-   // search for username. If found, verify password
-   for (int idUser = 0; idUser < sizeof(users) / sizeof(users[0]); idUser++)
-      if (name     == string(users[idUser].name    ) &&
-          password == string(users[idUser].password))
-         return idUser;
+  // search for username. If found, verify password
+  for (int idUser = 0; idUser < sizeof(users) / sizeof(users[0]); idUser++)
+    if (name     == string(users[idUser].name    ) &&
+        password == string(users[idUser].password))
+      return idUser;
 
-   // display error
-   cout << "Failed to authenticate " << name << endl;
-   return ID_INVALID;
+  // display error
+  cout << "Failed to authenticate " << name << endl;
+  return ID_INVALID;
 }
 
 /*********************************************
@@ -512,11 +617,11 @@ int authenticate()
  ********************************************/
 int main()
 {
-   authenticate();
-   
-   Interface interface;
+  int userID = authenticate();
 
-   interface.interact();
-   
-   return 0;
+  Interface interface(userID);
+
+  interface.interact();
+
+  return 0;
 }
