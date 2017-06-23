@@ -563,11 +563,11 @@ void Interface::interact()
           cout << "---------------------------------------------------\n";
         }
     }
-  else if (users[indexOfStudentGradeOfCurrentUser].privilegeLevel == STUDENT)
+  else if (users[userID].privilegeLevel == STUDENT)
     {
       cout << "Inside student display\n";
       //user id is not goint to work as an index here.
-      students[userID].displayScores();
+      students[indexOfStudentGradeOfCurrentUser].displayScores();
       // visual separater
       cout << "---------------------------------------------------\n";
     }
