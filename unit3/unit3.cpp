@@ -78,9 +78,9 @@ struct Resource
 
 const Resource resources[3] =
   {
-    { "/home/cs470/unit3/sam.txt" },
-    { "/home/cs470/unit3/sue.txt" },
-    { "/home/cs470/unit3/sly.txt" }
+    { "sam.txt" },
+    { "sue.txt" },
+    { "sly.txt" }
   };
 
 
@@ -579,16 +579,19 @@ void Interface::interact()
  ****************************************************/
 Interface::Interface(int userID)
 {
+  indexOfStudentGradeOfCurrentUser = 0;
   for (int i = 0; i < sizeof(resources) / sizeof(Resource); i++)
     {
+
       StudentGrade student(resources[i], userID);
       //need to get the indice of the studentGrade that matches our ID.
-      if (student.getName().compare(users[userID].nameForComparison) != 0)
+      if (student.getName().compare(users[userID].nameForComparison) == 0)
         {
           indexOfStudentGradeOfCurrentUser = i;
         }
-      students[i] = student;
+      students.push_back(student);
     }
+
   this->userID = userID;
 }
 
