@@ -173,6 +173,7 @@ float StudentGrade::getWeight(int iScore)
  **********************************************/
 StudentGrade::StudentGrade(const Resource & resource, int userID) : change(false), userID(userID)
 {
+  this->userID = userID;
   filename = resource.filename;
   assert(filename && *filename);
 
@@ -196,6 +197,7 @@ StudentGrade::StudentGrade(const Resource & resource, int userID) : change(false
   for (int i = 0; i < (int)(sizeof(users)/sizeof(users[0])); i++)
     {
       ACE ace;
+      ace.userID = i;
       if (users[i].privilegeLevel == PROFESSOR)
         {
           ace.write = true;
@@ -416,6 +418,10 @@ void StudentGrade::editScores()
  ***********************************************/
 void StudentGrade::displayScores()
 {
+  if (hasReadPermission() == false)
+    {
+      return;
+    }
   if (scores.size() == 0)
     return;
 
@@ -556,11 +562,18 @@ void Interface::interact()
           // edit grades as necessary
           students[iSelected].editScores();
 
-          // show the results
-          students[iSelected].displayScores();
+          if (users[userID].privilegeLevel == PROFESSOR)
+            {
+              // show the results
+              students[iSelected].displayScores();
 
-          // visual separater
-          cout << "---------------------------------------------------\n";
+              // visual separater
+              cout << "---------------------------------------------------\n";
+            }
+          else
+            {
+              cout << "Unable to read from the resources for " << students[iSelected].getName() << endl;
+            }
         }
     }
   else if (users[userID].privilegeLevel == STUDENT)
@@ -568,6 +581,9 @@ void Interface::interact()
       //user id is not goint to work as an index here.
       students[indexOfStudentGradeOfCurrentUser].displayScores();
       // visual separater
+    }
+  else
+    {
       cout << "---------------------------------------------------\n";
     }
   return;
@@ -591,7 +607,6 @@ Interface::Interface(int userID)
         }
       students.push_back(student);
     }
-
   this->userID = userID;
 }
 
