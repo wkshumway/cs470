@@ -4,7 +4,7 @@
 *    Brother Wilson, CS470
 * Author:
 *    Wellesley Shumway
-* Summary: 
+* Summary:
 *    Please include a detailed description of:
 *    1. What this program is designed to do
 *    This program will state whether to file paths are the same
@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <stack>
+#include <vector>
 using namespace std;
 
 void getFileName(string & fileName1, string & fileName2)
@@ -27,29 +28,68 @@ void getFileName(string & fileName1, string & fileName2)
   cout << "Specify the second filename:   ";
   cin >> fileName2;
 }
+
 vector<string> splitFilePath(string stringToSplit)
 {
   vector<string> vTokens;
+  string delimiter = "/";
+  size_t pos = 0;
+  string token;
 
-  for (int i = 0; i < stringToSplit.length(); i++)
-  {
-    if (
+  while ((pos = stringToSplit.find(delimiter)) != string::npos) {
+    token = stringToSplit.substr(0, pos);
+    if (token != "")
+      {
+        vTokens.push_back(token);
+      }
+    stringToSplit.erase(0, pos + delimiter.length());
   }
+  token = stringToSplit.substr(0, pos);
+  vTokens.push_back(token);
 
   return vTokens;
+}
+stack<string> converPathToStack(vector<string> path)
+{
+  stack<string> pathStack;
+
+  for (size_t i = 0; i < path.size(); i++)
+    {
+      if (path[i] == "..")
+        {
+          if (pathStack.empty())
+            {
+              //do nothing
+            }
+          else
+            {
+              pathStack.pop();
+            }
+        }
+      else if (path[i] == ".")
+        {
+          //do nothing
+        }
+      else
+        {
+          pathStack.push(path[i]);
+        }
+    }
+  return pathStack;
 }
 
 bool filesAreHomographs(string fileName1, string fileName2)
 {
   stack<string> file1Stack;
-  stack<string> file2Stack; 
+  stack<string> file2Stack;
+  vector<string> file1V;
+  vector<string> file2V;
 
-  for (int i = 0; i < fileName1.length(); i++)
-  {
-    
-  }
+  file1V = splitFilePath(fileName1);
+  cout << "Beetween the spleets\n";
+  file2V = splitFilePath(fileName2);
 
-  return false;
+  return (converPathToStack(file1V) == converPathToStack(file2V));
 }
 
 int main()
@@ -57,5 +97,13 @@ int main()
   string fileName1;
   string fileName2;
   getFileName(fileName1, fileName2);
+  if (filesAreHomographs(fileName1, fileName2))
+    {
+      cout << "The files are homographs\n";
+    }
+  else
+    {
+      cout << "The files are NOT homographs\n";
+    }
   return 0;
 }
