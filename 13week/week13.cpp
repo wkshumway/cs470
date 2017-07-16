@@ -23,9 +23,9 @@ using namespace std;
 
 void getFileName(string & fileName1, string & fileName2)
 {
-  cout << "Specify the first filename:   ";
+  cout << "Specify the first filename:  ";
   cin >> fileName1;
-  cout << "Specify the second filename:   ";
+  cout << "Specify the second filename: ";
   cin >> fileName2;
 }
 
@@ -86,7 +86,6 @@ bool filesAreHomographs(string fileName1, string fileName2)
   vector<string> file2V;
 
   file1V = splitFilePath(fileName1);
-  cout << "Beetween the spleets\n";
   file2V = splitFilePath(fileName2);
 
   return (converPathToStack(file1V) == converPathToStack(file2V));
