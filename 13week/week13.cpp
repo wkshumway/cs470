@@ -21,6 +21,9 @@
 #include <vector>
 using namespace std;
 
+/***********************************************************************
+ * getFileName will ask the users for the names of the two different files
+ ************************************************************************/
 void getFileName(string & fileName1, string & fileName2)
 {
   cout << "Specify the first filename:  ";
@@ -29,6 +32,10 @@ void getFileName(string & fileName1, string & fileName2)
   cin >> fileName2;
 }
 
+/***********************************************************************
+ * splitFilePath will split the filePath along the forward slashes
+ * algorithm source: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-com
+ ************************************************************************/
 vector<string> splitFilePath(string stringToSplit)
 {
   vector<string> vTokens;
@@ -49,6 +56,12 @@ vector<string> splitFilePath(string stringToSplit)
 
   return vTokens;
 }
+
+/***********************************************************************
+* convertPathToStack will make the accurate file path, without ".." and
+* "." by treating the file path as a stack, popping off the last directory
+* when there is a ".."
+************************************************************************/
 stack<string> converPathToStack(vector<string> path)
 {
   stack<string> pathStack;
@@ -78,6 +91,10 @@ stack<string> converPathToStack(vector<string> path)
   return pathStack;
 }
 
+/***********************************************************************
+ * filesAreHomographs will compare two filepaths to see whether or not
+ * they will lead to the same file
+ ************************************************************************/
 bool filesAreHomographs(string fileName1, string fileName2)
 {
   stack<string> file1Stack;
@@ -91,6 +108,9 @@ bool filesAreHomographs(string fileName1, string fileName2)
   return (converPathToStack(file1V) == converPathToStack(file2V));
 }
 
+/***********************************************************************
+ * main will drive the program
+ ************************************************************************/
 int main()
 {
   string fileName1;
