@@ -27,12 +27,31 @@ void getFileName(string & fileName1, string & fileName2)
   cout << "Specify the second filename:   ";
   cin >> fileName2;
 }
+vector<string> splitFilePath(string stringToSplit)
+{
+  vector<string> vTokens;
+
+  for (int i = 0; i < stringToSplit.length(); i++)
+  {
+    if (
+  }
+
+  return vTokens;
+}
 
 bool filesAreHomographs(string fileName1, string fileName2)
 {
-  
+  stack<string> file1Stack;
+  stack<string> file2Stack; 
+
+  for (int i = 0; i < fileName1.length(); i++)
+  {
+    
+  }
+
   return false;
 }
+
 int main()
 {
   string fileName1;
