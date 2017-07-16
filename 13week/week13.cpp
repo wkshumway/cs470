@@ -43,14 +43,19 @@ vector<string> splitFilePath(string stringToSplit)
   size_t pos = 0;
   string token;
 
-  while ((pos = stringToSplit.find(delimiter)) != string::npos) {
+  // while we have not reached the end of the string, grab the position of the next '/'
+  while ((pos = stringToSplit.find(delimiter)) != string::pos) {
+    // get the substring from the beginning to the delimiter
     token = stringToSplit.substr(0, pos);
     if (token != "")
       {
+        //grab the token
         vTokens.push_back(token);
       }
+    //deleter the part we grabbed
     stringToSplit.erase(0, pos + delimiter.length());
   }
+  //get the last token
   token = stringToSplit.substr(0, pos);
   vTokens.push_back(token);
 
@@ -76,6 +81,7 @@ stack<string> converPathToStack(vector<string> path)
             }
           else
             {
+              // pop if we find a ".."
               pathStack.pop();
             }
         }
